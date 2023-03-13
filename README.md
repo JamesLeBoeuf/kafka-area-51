@@ -42,4 +42,5 @@ Let’s unpack each of the steps in the above diagram and see how it fits into t
 
 #### IoT Device
 * Planes flying throughout the world are constantly sending and receiving data. This data consists of a whole plethora of information, but the most important data that we are worried about in this project is real-time location data (latitude & longitude).
+* Luckily, accessing this information isn’t quite that difficult, the hard part is finding the best API to use, without having to spend any money.
 
