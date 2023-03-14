@@ -85,8 +85,8 @@ Let’s unpack each of the steps in the above diagram and see how it fits into t
     "states": null
 }
 ```
-* This is fine, it's just saying that their currently isn't any tracked aircraft flying above Area 51, at the moment. What we need to do is finish setting this project up and so we can 'spy' and constantly check for Aircraft, and when their is results, we will save it into our database.
+* This is fine, it's just saying that their currently isn't any tracked aircraft flying above Area 51, at the moment.
 
 #### NiFi
- 
+NiFi is one of the most important pieces in this complex puzzle. It's a drag and drop ETL orchestration tool that is typically used for long-running jobs (perfect for this as sometimes we need to wait for results). It's suitable for both batch and streaming data. Since we are utilising Kafka, which is a major event streaming platform, it makes sense to choose NiFi.
 
