@@ -52,24 +52,43 @@ Let’s unpack each of the steps in the above diagram and see how it fits into t
 * OpenSky provides REST API endpoints for requesting data. The bit we are most interested in is the part about retrieving live airspace information with a bounding box. So if we take a look at one of their examples (i.e. request for bounding box covering Switzerland) ```https://opensky-network.org/api/states/all?lamin=45.8389&lomin=5.9962&lamax=47.8229&lomax=10.5226``` we notice that the result looks something like this...
 ```
 {
-    "time": 1678745539,
+    "time": 1678833474,
     "states": [
         [
             "4b1804",
-            "SWR890M ",
+            "SWR     ",
             "Switzerland",
-            1678745434,
-            1678745510,
-            8.5649,
-            47.442,
-            null,
+            1678833461,
+            1678833471,
+            8.5633,
+            47.4418,
+            434.34,
             true,
-            0.06,
-            143.44,
+            0,
+            64.69,
             null,
             null,
             null,
             "2000",
+            false,
+            0
+        ],
+        [
+            "4b1800",
+            "SWR     ",
+            "Switzerland",
+            1678833468,
+            1678833473,
+            6.1101,
+            46.2356,
+            null,
+            true,
+            0,
+            135,
+            null,
+            null,
+            null,
+            "2257",
             false,
             0
         ]
@@ -90,3 +109,144 @@ Let’s unpack each of the steps in the above diagram and see how it fits into t
 #### NiFi
 NiFi is one of the most important pieces in this complex puzzle. It's a drag and drop ETL orchestration tool that is typically used for long-running jobs (perfect for this as sometimes we need to wait for results). It's suitable for both batch and streaming data. Since we are utilising Kafka, which is a major event streaming platform, it makes sense to choose NiFi.
 
+Below is a screenshot of the multiple Processor flow of Nifi:
+
+<img width="1680" alt="nifi_overview" src="https://user-images.githubusercontent.com/7974277/223303664-497c4424-16ce-42f6-abc4-b7e541c900af.png">
+
+Step 1: InvokeHTTP
+This first Process step is important, because it's where we are setting the Remote URL, basic authentication information, and the scheduling of how often to make the request.
+
+Step 2: JoltTransformJSON
+This is a very handy Processor that NiFi comes with. It's basically going to allow us to transform the request from Step 1 into whatever new JSON structure that we are needing using the Jolt language. <a href="https://community.cloudera.com/t5/Community-Articles/Jolt-quick-reference-for-Nifi-Jolt-Processors/ta-p/244350">More information about NiFi Jolt Processor</a>.
+
+Remember from earlier, the JSON from OpenSky looks like this... It's basically nested arrays with no idea what each value in each array means. Which is not great.
+```
+{
+    "time": 1678833474,
+    "states": [
+        [
+            "4b1804",
+            "SWR     ",
+            "Switzerland",
+            1678833461,
+            1678833471,
+            8.5633,
+            47.4418,
+            434.34,
+            true,
+            0,
+            64.69,
+            null,
+            null,
+            null,
+            "2000",
+            false,
+            0
+        ],
+        [
+            "4b1800",
+            "SWR     ",
+            "Switzerland",
+            1678833468,
+            1678833473,
+            6.1101,
+            46.2356,
+            null,
+            true,
+            0,
+            135,
+            null,
+            null,
+            null,
+            "2257",
+            false,
+            0
+        ]
+    ]
+}
+ ```
+We need to transform this request to include column names so it will make life easier when we are saving into the MySQL database.
+Expected transformed output:
+```
+[
+  {
+    "icao24": "a57b26",
+    "callsign": "N452SM  ",
+    "origin_country": "United States",
+    "time_position": 1675791621,
+    "last_contact": 1675791621,
+    "long": -105.1168,
+    "lat": 39.9103,
+    "baro_altitude": null,
+    "on_ground": true,
+    "velocity": 0,
+    "true_track": 90,
+    "vertical_rate": null,
+    "sensors": null,
+    "geo_altitude": null,
+    "squawk": null,
+    "spi": false,
+    "position_source": 0
+  },
+  {...}
+]
+```
+This is where the power of Jolt Transform happens. It's a bit hard to read but I solved this by doing the following:
+```
+[
+  {
+    "operation": "default",
+    "spec": {
+      "temp": [
+        [
+          "icao24",
+          "callsign",
+          "origin_country",
+          "time_position",
+          "last_contact",
+          "long",
+          "lat",
+          "baro_altitude",
+          "on_ground",
+          "velocity",
+          "true_track",
+          "vertical_rate",
+          "sensors",
+          "geo_altitude",
+          "squawk",
+          "spi",
+          "position_source"
+        ]
+      ]
+    }
+  },
+  {
+    "operation": "shift",
+    "spec": {
+      "temp": {
+        "*": "states[]"
+      },
+      "states": {
+        "*": "states[]"
+      }
+    }
+  },
+  {
+    "operation": "shift",
+    "spec": {
+      "states": {
+        "*": {
+          "*": "[&1].@(2,[0].[&])"
+        }
+      }
+    }
+  },
+  {
+    "operation": "shift",
+    "spec": {
+      "0": null,
+      "*": "[]"
+    }
+  }
+]
+```
