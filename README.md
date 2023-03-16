@@ -300,14 +300,14 @@ I opted to configure this section to connect with Amazon MSK. In case you are wo
 #### Spark Streaming
 An Amazon EMR (Elastic Map Reduce) Spark cluster was deployed to handle the data-stream processing. It is used in conjunction with Hudi to allow for record-level data management in S3, where the data is partitioned and stored.
 
-The spark submit script that is used by Spark EMR Cluster is located: https://github.com/JamesLeBoeuf/wcd_de_final/tree/main/pyspark
+The spark submit script that is used by Spark EMR Cluster is located: https://github.com/JamesLeBoeuf/kafka-area-51/tree/main/pyspark
 
 #### Hudi Table
 Hudi is great for streaming workloads and for decreased data latency during ingestion. According to the documentation <i>"Hudi provides tables, transactions, efficient upserts/deletes, advanced indexes, streaming ingestion services, data clustering/compaction optimizations, and concurrency all while keeping your data in open source file formats."</i>.
 
 Also, one of the most important considerations with using Hudi is that streaming IoT devices (flight lat / long streaming data) and ingestion pipelines oftentimes need to handle data insertion and update events without creating an excess of small files. This can cause performance issues with analytics.
 
-The Hudi settings and configuration related to this pipeline can be found here: https://github.com/JamesLeBoeuf/wcd_de_final/blob/main/pyspark/wcd_streaming_flights.py
+The Hudi settings and configuration related to this pipeline can be found here: https://github.com/JamesLeBoeuf/kafka-area-51/blob/main/pyspark/wcd_streaming_flights.py
 
 #### Amazon S3
 The S3 bucket is crucial as it holds all of the data and configuration settings. It contains athena metadata, hudi partitioned data, flight table schema, and the python hudi configuration file that's necessary in the spark streaming - spark submit script.
@@ -318,4 +318,4 @@ Athena is used for viewing the table data after it's been processed by EMR/Hudi.
 #### Great Expectations
 This is a data platform that's used to connect to the Athena table to provide and uphold data quality. It accelerates data discovery and gives an unlimited amount of ways to test / validate the data.
 
-More information about the projects use of great expectations can be found in the great_expectations folder: https://github.com/JamesLeBoeuf/wcd_de_final/tree/main/great_expectations
+More information about the projects use of great expectations can be found in the great_expectations folder: https://github.com/JamesLeBoeuf/kafka-area-51/tree/main/great_expectations
