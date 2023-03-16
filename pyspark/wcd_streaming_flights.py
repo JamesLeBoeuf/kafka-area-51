@@ -30,7 +30,7 @@ table_name = 'flight_status'
 # .option('hoodie.insert.shuffle.parallelism', '100') \
 # Increase size if data is bigger
 # 100 means how many partitions we are going to use when we do a shuffle
-def bus_batch_function(batchDF, batchID):
+def flight_batch_function(batchDF, batchID):
     batchDF.write.format('org.apache.hudi') \
         .option('hoodie.datasource.write.table.type', 'COPY_ON_WRITE') \
         .option('hoodie.datasource.write.precombine.field', 'event_time') \
@@ -75,6 +75,6 @@ if __name__ == "__main__":
         .writeStream \
         .option("checkpointLocation", checkpoint_location) \
         .queryName(query_name) \
-        .foreachBatch(bus_batch_function) \
+        .foreachBatch(flight_batch_function) \
         .start() \
         .awaitTermination()
