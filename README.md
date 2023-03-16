@@ -26,6 +26,8 @@
           <li><a href="#mysql">MySQL</a></li>
           <li><a href="#nifi">NiFi</a></li>
           <li><a href="#kafka">Kafka</a></li>
+          <li><a href="#spark-streaming">Spark Streaming</a></li>
+          <li><a href="#hudi-table">Hudi Table</a></li>
         </ul>
       </ul>
     </li>
@@ -292,3 +294,7 @@ Since Area 51's airspace will always have activity, it makes sense to look at th
 
 I opted to configure this section to connect with Amazon MSK. In case you are wondering, <i>"Amazon MSK allows you to use open-source versions of Apache Kafka while the service manages the setup, provisioning, AWS integrations, and on-going maintenance of Apache Kafka clusters."</i> This will allow for more robust durability and handle a lot of the overhead that Kafka tends to have.
 
+#### Spark Streaming
+An Amazon EMR (Elastic Map Reduce) cluster was created here to handle the data-stream processing. It utilizes two main files located in https://github.com/JamesLeBoeuf/wcd_de_final/tree/main/pyspark. Both the spark-submit shell script and the python file that sits in an s3 bucket are used when a new flight record is recieved by EMR.
+
+#### Hudi Table
