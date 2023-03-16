@@ -286,9 +286,9 @@ The final transformation contains the necessary column names and removes the arr
 ]
 ```
 
-Step 3: ConvertJSONToSQL. This processor is going to allow us to communicate with the MySQL database, convert our JSON response from step 2 to SQL, and process SQL statements. In order to achieve this, JDBC pool connection needs to be set up.
+Step 3: ConvertJSONToSQL. This processor is going to allow us to communicate with the MySQL database, convert our JSON response from step 2 to SQL, and process SQL statements.
 
-Step 4: PutSQL. This is where NiFi executes a SQL INSERT command. The most important part of this Processor is setting the correct DB connection, which is the DBCPConnectionPool that was configured in Step 3.
+Step 4: PutSQL. This is where NiFi executes a SQL INSERT command.
 
 The flow of these 4 steps are all connected to LogAttributes so that they can be used for logging and debugging purposes.
 
