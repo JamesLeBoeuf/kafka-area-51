@@ -108,9 +108,9 @@ Let’s unpack each of the steps in the above diagram and see how it fits into t
 * This is fine, it's just saying that their currently isn't any tracked aircraft flying above Area 51, at the moment.
 
 #### MySQL
-Before NiFi is setup, a MySQL database needs to be installed and configured with an additional layer called Debezium to handle CDC (Change Data Capture). In case you might be wondering, Debezium is going to allow us to convert MySQL database information into event streams to be used with Kafka. The formal definition is <i>"Debezium is a distributed platform that converts information from your existing databases into event streams, enabling applications to detect, and immediately respond to row-level changes in the databases."</i>
+Before NiFi is setup, a MySQL database needs to be installed and configured with an additional layer called Debezium to handle CDC (Change Data Capture). In case you might be wondering, Debezium is going to convert MySQL database information into event streams to be used with Kafka. The formal definition is <i>"Debezium is a distributed platform that turns your existing databases into event streams, so applications can quickly react to each row-level change in the databases. Debezium is built on top of Kafka and provides Kafka Connect compatible connectors that monitor specific database management systems. Debezium records the history of data changes in Kafka logs, so your application can be stopped and restarted at any time and can easily consume all of the events it missed while it was not running, ensuring that all events are processed correctly and completely."</i>
 
-MySQL will be installed with the help of Docker. The Docker container command for this is
+MySQL & the Debezium layer will be installed with the help of Docker. The Docker container command for this is
 ```docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=debezium -e MYSQL_USER=mysqluser -e MYSQL_PASSWORD=mysqlpw debezium/example-mysql:1.6```
 Basically this command is building a docker container, in detached & interactive mode with the name mysql, opening port 3306, setting environment mysql variables, from the debezium/example-mysql:1.6 image.
 
