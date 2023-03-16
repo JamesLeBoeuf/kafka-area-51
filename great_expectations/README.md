@@ -2,10 +2,6 @@
 
 Great Expectations is a python testing library for data quality. Its allows to validate, document, and profile data to make sure the data is exactly as you expected.
 
-Steps:
-1. Create datasource to connect to Athena dataset - wcd_de_final_datasource.ipynb
-2. Create testing suite to run validations against Athena dataset - edit_wcd_de_final_flights.flight_status.warning.ipynb
-
 Below are screenshots showing successful suite testing against the flight dataset.
 
 <img width="1281" alt="Screenshot 2023-03-06 at 3 58 07 PM" src="https://user-images.githubusercontent.com/7974277/223565483-2112de81-862a-4be5-92b3-f6e0802f6667.png">
