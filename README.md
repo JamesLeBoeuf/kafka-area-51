@@ -25,6 +25,7 @@
           <li><a href="#backend-api">Backend API</a></li>
           <li><a href="#mysql">MySQL</a></li>
           <li><a href="#nifi">NiFi</a></li>
+          <li><a href="#kafka">Kafka</a></li>
         </ul>
       </ul>
     </li>
@@ -348,3 +349,17 @@ Pictured is the specified the Database Connection URL, Database Driver Class Nam
 Step 4: PutSQL. This is where NiFi executes a SQL INSERT command. The most important part of this Processor is setting the correct DB connection, which is the DBCPConnectionPool that was configured in Step 3.
 
 The flow of these 4 steps are all connected to LogAttributes so that they can be used for logging and debugging purposes. 
+
+#### Kafka
+Since Area 51's airspace will always have activity, it makes sense to look at this as an inifite amount of data being handled and processed. Another way to look at this infinite amount of data being recorded spread out over time, is a stream of data. The stream of flight data keeps arriving, so a tool is needed to handle this. So it makes sense to choose a data-streaming tool like Kafka.
+
+I opted to configure this section to connect with Amazon MSK. In case you are wondering, <i>"Amazon MSK allows you to use open-source versions of Apache Kafka while the service manages the setup, provisioning, AWS integrations, and on-going maintenance of Apache Kafka clusters."</i> This will allow for more robust durability and handle a lot of the overhead that Kafka tends to have.
+
+So now is where a connection to AWS MSK needs to be made. This was done by downloading Kafka binaries on the server running the docker images, spinning up an MSK instance, saving the MSK zookeeper & bootstrap server connection strings into a client.properties file in the kafka binaries, and running a new docker image specific for the msk connection.
+
+The docker command for connect-msk container is ```docker run -dit --name connect-msk -p 8083:8083 -e GROUP_ID=1 -e CONFIG_STORAGE_TOPIC=my-connect-configs -e OFFSET_STORAGE_TOPIC=my-connect-offsets -e STATUS_STORAGE_TOPIC=my_connect_statuses -e BOOTSTRAP_SERVERS=$BOOTSTRAP_SERVERS -e KAFKA_VERSION=2.6.2 -e CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=2 -e CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=2 -e CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=2 --link mysql:mysql debezium/connect:1.8.0.Final```
+
+You can see that the MSK bootstrap endpoint is specified as one of the environment variables above. The rest of the environment variables are further explained in the docker debezium/connect documentation found here: https://hub.docker.com/r/debezium/connect
+
+Note: I can further drill down into the steps needed in the Kafka section. I simply just wanted to provide a brief overview. Please let me know if you'd like more information.
+
