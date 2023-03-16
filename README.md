@@ -23,6 +23,7 @@
         <ul>
           <li><a href="#iot-device">IoT Device</a></li>
           <li><a href="#backend-api">Backend API</a></li>
+          <li><a href="#mysql">MySQL</a></li>
           <li><a href="#nifi">NiFi</a></li>
         </ul>
       </ul>
@@ -106,15 +107,60 @@ Let’s unpack each of the steps in the above diagram and see how it fits into t
 ```
 * This is fine, it's just saying that their currently isn't any tracked aircraft flying above Area 51, at the moment.
 
+#### MySQL
+Before NiFi is setup, a MySQL database needs to be installed and configured with an additional layer called Debezium to handle CDC (Change Data Capture). In case you might be wondering, Debezium is going to allow us to convert MySQL database information into event streams to be used with Kafka. The formal definition is <i>"Debezium is a distributed platform that converts information from your existing databases into event streams, enabling applications to detect, and immediately respond to row-level changes in the databases."</i>
+
+We're going to install MySQL with the help of Docker. The Docker container command for this is
+```docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=debezium -e MYSQL_USER=mysqluser -e MYSQL_PASSWORD=mysqlpw debezium/example-mysql:1.6```
+Basically in this command we are building a docker container, in detached & interactive mode with the name mysql, opening port 3306, setting environment mysql variables, from the debezium/example-mysql:1.6 image.
+
+Now, we need to
+* ```exec``` into the newly created ```mysql``` docker container using bash
+  * ```docker exec -it mysql bash```
+* Create a database
+  * ```create database flights;```
+  * ```use flights;```
+* Create a new table.
+  * Note that the column names, except for record_id, event_time, and primary key, created in this table are referenced at https://openskynetwork.github.io/opensky-api/rest.html
+```
+CREATE TABLE flight_status (
+    record_id INT NOT NULL AUTO_INCREMENT,
+    icao24 VARCHAR(40),
+    callsign VARCHAR(40),
+    origin_country VARCHAR(60),
+    time_position INT,
+    last_contact INT,
+    longitude REAL,
+    latitude REAL,
+    baro_altitude VARCHAR(40),
+    on_ground BOOLEAN,
+    velocity VARCHAR(40),
+    true_track REAL,
+    vertical_rate VARCHAR(40),
+    sensors VARCHAR(40),
+    geo_altitude VARCHAR(40),
+    squawk VARCHAR(40),
+    spi BOOLEAN,
+    position_source INT,
+    category INT,
+    event_time DATETIME DEFAULT NOW(),
+    PRIMARY KEY (record_id)
+);
+```
+Now it's time to setup NiFi.
+
 #### NiFi
 NiFi is one of the most important pieces in this complex puzzle. It's a drag and drop ETL orchestration tool that is typically used for long-running jobs (perfect for this as sometimes we need to wait for results). It's suitable for both batch and streaming data. Since we are utilising Kafka, which is a major event streaming platform, it makes sense to choose NiFi.
+
+We're going to install NiFi with the help of Docker again. The Docker command for this is:
+```docker run --name nifi -p 8080:8080 --link mysql:mysql -d apache/nifi:1.12.0```
 
 Below is a screenshot of the multiple Processor flow of Nifi:
 
 <img width="1680" alt="nifi_overview" src="https://user-images.githubusercontent.com/7974277/223303664-497c4424-16ce-42f6-abc4-b7e541c900af.png">
 
 Step 1: InvokeHTTP
-This first Process step is important, because it's where we are setting the Remote URL, basic authentication information, and the scheduling of how often to make the request.
+This first Process step is important, because it's where we are setting the Remote URL, basic request authentication information, and the scheduling of how often to make the request.
 
 Step 2: JoltTransformJSON
 This is a very handy Processor that NiFi comes with. It's basically going to allow us to transform the request from Step 1 into whatever new JSON structure that we are needing using the Jolt language. <a href="https://community.cloudera.com/t5/Community-Articles/Jolt-quick-reference-for-Nifi-Jolt-Processors/ta-p/244350">More information about NiFi Jolt Processor</a>.
@@ -250,3 +296,29 @@ This is where the power of Jolt Transform happens. It's a bit hard to read but I
   }
 ]
 ```
+The final transformation contains the necessary column names and removes the array nesting. Looks as follows:
+```
+[
+  {
+    "icao24": "a57b26",
+    "callsign": "N452SM  ",
+    "origin_country": "United States",
+    "time_position": 1675791621,
+    "last_contact": 1675791621,
+    "long": -105.1168,
+    "lat": 39.9103,
+    "baro_altitude": null,
+    "on_ground": true,
+    "velocity": 0,
+    "true_track": 90,
+    "vertical_rate": null,
+    "sensors": null,
+    "geo_altitude": null,
+    "squawk": null,
+    "spi": false,
+    "position_source": 0
+  },
+  {...}
+]
+```
+Now it's ready to save into the MySQL database.
